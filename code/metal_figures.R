@@ -27,7 +27,16 @@ metals %>%
   left_join(limits) %>% 
   mutate(metal = paste(metal, "(mg/kg)")) -> metals
 
-# figure ----
+# note that there are no Se values in the metals file
+# the following could be used instead of the above to 
+# remove any missing values from all figures
+
+# metals %>% 
+#   left_join(limits) %>% 
+#   mutate(metal = paste(metal, "(mg/kg)")) %>% 
+#   drop_na -> metals
+
+# figures ----
 # create a list of figures by location
 
 metals %>% 
