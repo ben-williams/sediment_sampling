@@ -58,7 +58,6 @@ metals %>%
                   dir="v") +
        geom_text(aes(label = detected), vjust = -0.25, size = 3)) -> out 
 
-out[[2]][[2]]
 # save each plot into the "figs" folder, 
 # naming each figure along the way
 
