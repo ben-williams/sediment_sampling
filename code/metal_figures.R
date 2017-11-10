@@ -39,7 +39,10 @@ metals %>%
                               detected == 'y' ~ ''),
          value = ifelse(detected == 'ND', 0.0, value)) %>% 
   group_by(metal) %>% 
-  mutate(max_y = max(value)) %>% 
+  mutate(max_y = ifelse(is.na(PEC), max(value) + max(value) * 0.1, 
+                        ifelse(!is.na(PEC) & max(value)>PEC, 
+                               max(value) + max(value) * 0.1, PEC + PEC * 0.1)),
+         max_y = ifelse(max_y<1, 1.2, max_y)) %>% 
   group_by(location) %>% 
   do(plots = ggplot(data = ., aes(year, value)) + 
        geom_point(data = . %>% filter(detected != 'ND')) +
@@ -55,7 +58,7 @@ metals %>%
                   dir="v") +
        geom_text(aes(label = detected), vjust = -0.25, size = 3)) -> out 
 
-
+out[[2]][[2]]
 # save each plot into the "figs" folder, 
 # naming each figure along the way
 
