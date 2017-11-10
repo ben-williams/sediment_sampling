@@ -35,17 +35,17 @@ metals <- read_csv('data/kgm_metals.csv')
 metals %>% 
   left_join(limits) %>% 
   mutate(metal = paste(metal, "(mg/kg)"),
-         detected = case_when(detected == 'n' ~ 'nd',
+         detected = case_when(detected == 'n' ~ 'ND',
                               detected == 'y' ~ ''),
-         value = ifelse(detected == 'nd', 0.0, value)) %>% 
+         value = ifelse(detected == 'ND', 0.0, value)) %>% 
   group_by(metal) %>% 
   mutate(max_y = max(value)) %>% 
   group_by(location) %>% 
   do(plots = ggplot(data = ., aes(year, value)) + 
-       geom_point(data = . %>% filter(detected != 'nd')) +
+       geom_point(data = . %>% filter(detected != 'ND')) +
        xlab('') + ylab('') +
        expand_limits(y = 0) +
-       scale_y_continuous(label=comma) +
+       scale_y_continuous(label=comma, breaks = scales::pretty_breaks(n=3)) +
        geom_line(aes(year, TEC), lty = 4) +
        geom_line(aes(year, PEC)) +
        geom_blank(aes(year, max_y)) +
@@ -53,7 +53,8 @@ metals %>%
                   strip.position  = "left", 
                   ncol = 2,
                   dir="v") +
-       geom_text(aes(label = detected), vjust = -0.25)) -> out 
+       geom_text(aes(label = detected), vjust = -0.25, size = 3)) -> out 
+
 
 # save each plot into the "figs" folder, 
 # naming each figure along the way
