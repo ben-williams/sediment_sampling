@@ -1,11 +1,12 @@
-# metal figures for Johnny 
+# metal figures for Johnny Zutz
 # created by ben.williams@alaska.gov
 # Nov 2017
 
 # load ----
 # this loads the necessary libraries - you may have to run the 
 # "font_import()" if you haven't before - the rest of this 
-# is setting the "themes" to use 
+# is setting the "themes" to use that will establish the plot appearance
+
 library(tidyverse)
 library(scales)
 library(extrafont)
@@ -20,40 +21,41 @@ theme_set(theme_bw(base_size=12, base_family='Times New Roman')+
 
 # data ----
 limits <- read_csv('data/tecpec.csv')
-metals <- read_csv('data/metals.csv')
-
-# join the two files and change add the units to the metals
-metals %>% 
-  left_join(limits) %>% 
-  mutate(metal = paste(metal, "(mg/kg)")) -> metals
-
-# note that there are no Se values in the metals file
-# the following could be used instead of the above to 
-# remove any missing values from all figures
-
-# metals %>% 
-#   left_join(limits) %>% 
-#   mutate(metal = paste(metal, "(mg/kg)")) %>% 
-#   drop_na -> metals
+metals <- read_csv('data/kgm_metals.csv')
 
 # figures ----
-# create a list of figures by location
+# this code does the following:
+# a) joins the metal data with the limit data
+# b) tweaks some value for future plotting purposes
+# c) cycles through each group, creates a faceted plot
+#       for each metal
+# d) saves the output in a list format, the first part of this list are the
+#       location names, the second index is the figures
 
 metals %>% 
+  left_join(limits) %>% 
+  mutate(metal = paste(metal, "(mg/kg)"),
+         detected = case_when(detected == 'n' ~ 'nd',
+                              detected == 'y' ~ ''),
+         value = ifelse(detected == 'nd', 0.0, value)) %>% 
+  group_by(metal) %>% 
+  mutate(max_y = max(value)) %>% 
   group_by(location) %>% 
   do(plots = ggplot(data = ., aes(year, value)) + 
-       geom_point() +
+       geom_point(data = . %>% filter(detected != 'nd')) +
        xlab('') + ylab('') +
        expand_limits(y = 0) +
        scale_y_continuous(label=comma) +
        geom_line(aes(year, TEC), lty = 4) +
        geom_line(aes(year, PEC)) +
+       geom_blank(aes(year, max_y)) +
        facet_wrap(~metal, scales = 'free_y', 
                   strip.position  = "left", 
                   ncol = 2,
-                  dir="v")) -> out
+                  dir="v") +
+       geom_text(aes(label = detected), vjust = -0.25)) -> out 
 
-# plot each figure (into the "figs" folder), 
+# save each plot into the "figs" folder, 
 # naming each figure along the way
 
 for(i in 1:length(out[[1]])){
